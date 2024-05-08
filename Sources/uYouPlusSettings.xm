@@ -180,6 +180,53 @@ extern NSBundle *uYouPlusBundle();
     ];
     [sectionItems addObject:developers];
 
+    YTSettingsSectionItem *copySettings = [%c(YTSettingsSectionItem)
+        itemWithTitle:LOC(@"Copy Settings")
+        titleDescription:LOC(@"Copy all current settings to the clipboard")
+        accessibilityIdentifier:nil
+        detailTextBlock:nil
+        selectBlock:^BOOL (YTSettingsCell *cell, NSUInteger arg1) {
+//
+            NSMutableString *settingsString = [NSMutableString string];
+            for (NSString *key in @{ /* Define all keys you want to copy here */ }) {
+                BOOL enabled = [[NSUserDefaults standardUserDefaults] boolForKey:key];
+                [settingsString appendFormat:@"%@: %d", key, enabled ? 1 : 0];
+            }
+            [[UIPasteboard generalPasteboard] setString:settingsString];
+            // show a confirmation message or perform some other action here - @arichornlover
+            return YES;
+        }
+    ];
+    [sectionItems addObject:copySettings];
+
+    YTSettingsSectionItem *pasteSettings = [%c(YTSettingsSectionItem)
+        itemWithTitle:LOC(@"Paste Settings")
+        titleDescription:LOC(@"Paste settings from clipboard and apply")
+        accessibilityIdentifier:nil
+        detailTextBlock:nil
+        selectBlock:^BOOL (YTSettingsCell *cell, NSUInteger arg1) {
+            // Your code to parse and apply settings from clipboard here
+            NSString *settingsString = [[UIPasteboard generalPasteboard] string];
+        
+            if (settingsString.length > 0) {
+                NSArray *lines = [settingsString componentsSeparatedByString:@"\n"];
+            
+                for (NSString *line in lines) {
+                    NSArray *components = [line componentsSeparatedByString:@": "];
+                    if (components.count == 2) {
+                        NSString *key = components[0];
+                        BOOL value = [components[1] intValue];
+                        [[NSUserDefaults standardUserDefaults] setBool:value forKey:key];
+                    }
+                }
+            }
+            [settingsViewController reloadData];
+            SHOW_RELAUNCH_YT_SNACKBAR;
+            return YES;
+        }
+    ];
+    [sectionItems addObject:pasteSettings];
+
     YTSettingsSectionItem *exitYT = [%c(YTSettingsSectionItem)
         itemWithTitle:LOC(@"QUIT_YOUTUBE")
         titleDescription:nil
